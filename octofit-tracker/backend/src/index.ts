@@ -1,5 +1,10 @@
 import express from 'express'
 import mongoose from 'mongoose'
+import User from './models/user.ts'
+import Team from './models/team.ts'
+import Activity from './models/activity.ts'
+import Workout from './models/workout.ts'
+import Leaderboard from './models/leaderboard.ts'
 
 const app = express()
 const port = 8000
@@ -7,7 +12,7 @@ const codespaceName = process.env.CODESPACE_NAME
 const apiBaseUrl = codespaceName
   ? `https://${codespaceName}-8000.githubpreview.dev`
   : `http://localhost:${port}`
-const mongoUrl = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017/octofit_tracker'
+const mongoUrl = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017/octofit_db'
 
 app.use(express.json())
 
@@ -19,44 +24,33 @@ app.get('/', (req, res) => {
   })
 })
 
-app.get('/api/users', (req, res) => {
-  res.json({
-    endpoint: '/api/users',
-    message: 'User listing placeholder for OctoFit Tracker.',
-    data: [],
-  })
+app.get('/api/users', async (req, res) => {
+  const users = await User.find().populate('team', 'name')
+  res.json({ endpoint: '/api/users', count: users.length, data: users })
 })
 
-app.get('/api/teams', (req, res) => {
-  res.json({
-    endpoint: '/api/teams',
-    message: 'Team listing placeholder for OctoFit Tracker.',
-    data: [],
-  })
+app.get('/api/teams', async (req, res) => {
+  const teams = await Team.find().populate('members', 'name email role')
+  res.json({ endpoint: '/api/teams', count: teams.length, data: teams })
 })
 
-app.get('/api/activities', (req, res) => {
-  res.json({
-    endpoint: '/api/activities',
-    message: 'Activity listing placeholder for OctoFit Tracker.',
-    data: [],
-  })
+app.get('/api/activities', async (req, res) => {
+  const activities = await Activity.find()
+    .populate('user', 'name email')
+    .populate('team', 'name')
+  res.json({ endpoint: '/api/activities', count: activities.length, data: activities })
 })
 
-app.get('/api/leaderboard', (req, res) => {
-  res.json({
-    endpoint: '/api/leaderboard',
-    message: 'Leaderboard placeholder for OctoFit Tracker.',
-    data: [],
-  })
+app.get('/api/leaderboard', async (req, res) => {
+  const leaderboard = await Leaderboard.find()
+    .populate('user', 'name')
+    .populate('team', 'name')
+  res.json({ endpoint: '/api/leaderboard', count: leaderboard.length, data: leaderboard })
 })
 
-app.get('/api/workouts', (req, res) => {
-  res.json({
-    endpoint: '/api/workouts',
-    message: 'Workout listing placeholder for OctoFit Tracker.',
-    data: [],
-  })
+app.get('/api/workouts', async (req, res) => {
+  const workouts = await Workout.find()
+  res.json({ endpoint: '/api/workouts', count: workouts.length, data: workouts })
 })
 
 mongoose
