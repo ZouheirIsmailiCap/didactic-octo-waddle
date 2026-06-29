@@ -1,12 +1,13 @@
-import mongoose from 'mongoose'
-import User from '../models/user.ts'
-import Team from '../models/team.ts'
-import Activity from '../models/activity.ts'
-import Workout from '../models/workout.ts'
-import Leaderboard from '../models/leaderboard.ts'
+import mongoose, { Types } from 'mongoose'
+import User from '../models/user'
+import Team from '../models/team'
+import Activity from '../models/activity'
+import Workout from '../models/workout'
+import Leaderboard from '../models/leaderboard'
+import { connectDatabase, getMongoUrl } from '../database'
 
 // Seed the octofit_db database with test data
-const mongoUrl = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017/octofit_db'
+const mongoUrl = getMongoUrl()
 
 const users = [
   { name: 'Ava Chen', email: 'ava.chen@example.com', role: 'athlete' },
@@ -75,7 +76,7 @@ const leaderboardEntries = [
 async function seed() {
   console.log('Seed the octofit_db database with test data')
 
-  await mongoose.connect(mongoUrl)
+  await connectDatabase()
   console.log('Connected to MongoDB at', mongoUrl)
 
   await Promise.all([
@@ -89,10 +90,13 @@ async function seed() {
   const createdUsers = await User.create(users)
   const createdTeams = await Team.create(teams)
 
-  createdTeams[0].members = [createdUsers[0]._id, createdUsers[2]._id]
-  createdTeams[1].members = [createdUsers[1]._id, createdUsers[3]._id]
-  await createdTeams[0].save()
-  await createdTeams[1].save()
+  const teamOne = createdTeams[0] as any
+  const teamTwo = createdTeams[1] as any
+
+  teamOne.members = [createdUsers[0]._id, createdUsers[2]._id]
+  teamTwo.members = [createdUsers[1]._id, createdUsers[3]._id]
+  await teamOne.save()
+  await teamTwo.save()
 
   const createdActivities = await Activity.create([
     { ...activities[0], user: createdUsers[0]._id, team: createdTeams[0]._id },

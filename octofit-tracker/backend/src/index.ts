@@ -1,10 +1,10 @@
 import express from 'express'
-import mongoose from 'mongoose'
-import User from './models/user.ts'
-import Team from './models/team.ts'
-import Activity from './models/activity.ts'
-import Workout from './models/workout.ts'
-import Leaderboard from './models/leaderboard.ts'
+import User from './models/user'
+import Team from './models/team'
+import Activity from './models/activity'
+import Workout from './models/workout'
+import Leaderboard from './models/leaderboard'
+import { connectDatabase, getMongoUrl } from './database'
 
 const app = express()
 const port = 8000
@@ -12,7 +12,7 @@ const codespaceName = process.env.CODESPACE_NAME
 const apiBaseUrl = codespaceName
   ? `https://${codespaceName}-8000.githubpreview.dev`
   : `http://localhost:${port}`
-const mongoUrl = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017/octofit_db'
+const mongoUrl = getMongoUrl()
 
 app.use(express.json())
 
@@ -53,8 +53,7 @@ app.get('/api/workouts', async (req, res) => {
   res.json({ endpoint: '/api/workouts', count: workouts.length, data: workouts })
 })
 
-mongoose
-  .connect(mongoUrl)
+connectDatabase()
   .then(() => {
     console.log('Connected to MongoDB at', mongoUrl)
     app.listen(port, () => {
