@@ -18,46 +18,51 @@ const apiBaseUrl = codespaceName
     : `http://localhost:${port}`;
 const mongoUrl = (0, database_1.getMongoUrl)();
 app.use(express_1.default.json());
-app.get('/', (req, res) => {
-    res.send({
+app.get('/', (_req, res) => {
+    res.json({
         message: 'OctoFit Tracker backend is running.',
         apiBaseUrl,
         port,
     });
 });
-app.get('/api/users', async (req, res) => {
+app.get(['/api/users', '/api/users/'], async (_req, res) => {
     const users = await user_1.default.find().populate('team', 'name');
-    res.json({ endpoint: '/api/users', count: users.length, data: users });
+    res.json({ endpoint: '/api/users/', count: users.length, data: users });
 });
-app.get('/api/teams', async (req, res) => {
+app.get(['/api/teams', '/api/teams/'], async (_req, res) => {
     const teams = await team_1.default.find().populate('members', 'name email role');
-    res.json({ endpoint: '/api/teams', count: teams.length, data: teams });
+    res.json({ endpoint: '/api/teams/', count: teams.length, data: teams });
 });
-app.get('/api/activities', async (req, res) => {
+app.get(['/api/activities', '/api/activities/'], async (_req, res) => {
     const activities = await activity_1.default.find()
         .populate('user', 'name email')
         .populate('team', 'name');
-    res.json({ endpoint: '/api/activities', count: activities.length, data: activities });
+    res.json({ endpoint: '/api/activities/', count: activities.length, data: activities });
 });
-app.get('/api/leaderboard', async (req, res) => {
+app.get(['/api/leaderboard', '/api/leaderboard/'], async (_req, res) => {
     const leaderboard = await leaderboard_1.default.find()
         .populate('user', 'name')
         .populate('team', 'name');
-    res.json({ endpoint: '/api/leaderboard', count: leaderboard.length, data: leaderboard });
+    res.json({ endpoint: '/api/leaderboard/', count: leaderboard.length, data: leaderboard });
 });
-app.get('/api/workouts', async (req, res) => {
+app.get(['/api/workouts', '/api/workouts/'], async (_req, res) => {
     const workouts = await workout_1.default.find();
-    res.json({ endpoint: '/api/workouts', count: workouts.length, data: workouts });
+    res.json({ endpoint: '/api/workouts/', count: workouts.length, data: workouts });
 });
-(0, database_1.connectDatabase)()
-    .then(() => {
-    console.log('Connected to MongoDB at', mongoUrl);
+async function startServer() {
+    try {
+        await (0, database_1.connectDatabase)();
+        console.log('Connected to MongoDB at', mongoUrl);
+    }
+    catch (error) {
+        console.warn('MongoDB connection unavailable, continuing without database:', error);
+    }
     app.listen(port, () => {
         console.log(`Backend running at http://localhost:${port}`);
         console.log(`Codespaces-aware API URL: ${apiBaseUrl}`);
     });
-})
-    .catch((error) => {
-    console.error('MongoDB connection error:', error);
+}
+startServer().catch((error) => {
+    console.error('Server failed to start:', error);
     process.exit(1);
 });
